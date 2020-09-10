@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import csrf from 'csurf';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
@@ -11,10 +12,9 @@ import { attachUser } from './middlewares/auth';
 import auth from './routes/auth';
 import users from './routes/users';
 
-/**
- * TODO
- * csrf
- */
+const csrfProtection = csrf({
+  cookie: true,
+});
 
 const app = express();
 
@@ -22,6 +22,12 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+app.use(csrfProtection);
+
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 app.use('/api/auth', auth());
 

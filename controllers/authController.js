@@ -37,11 +37,10 @@ export default {
       const decodedToken = jwtDecode(token);
       const expiresAt = decodedToken.exp;
 
-      const { firstName, lastName, email, role } = savedUser;
+      const { login, email, role } = savedUser;
 
       const userInfo = {
-        firstName,
-        lastName,
+        login,
         email,
         role,
       };
@@ -52,7 +51,7 @@ export default {
 
       return res.json({
         message: 'User created!',
-        token,
+        // token,
         userInfo,
         expiresAt,
       });
@@ -99,7 +98,7 @@ export default {
 
       return res.json({
         message: 'Authentication successful!',
-        token,
+        // token,
         userInfo,
         expiresAt,
       });
