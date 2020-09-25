@@ -11,6 +11,7 @@ import { attachUser } from './middlewares/auth';
 
 import auth from './routes/auth';
 import users from './routes/users';
+import tactics from './routes/tactics';
 
 const csrfProtection = csrf({
   cookie: true,
@@ -33,6 +34,7 @@ app.use('/api/auth', auth());
 
 app.use(attachUser);
 app.use('/api/users', users());
+app.use('/api/tactics', tactics());
 
 app.use(notFound);
 app.use(catchErrors);
