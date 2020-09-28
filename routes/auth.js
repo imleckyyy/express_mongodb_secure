@@ -7,6 +7,7 @@ export default () => {
 
   api.post('/signup', catchAsync(authController.signup));
   api.post('/signin', catchAsync(authController.signin));
+  api.post('/logout', catchAsync(authController.logout));
 
   return api;
 };

@@ -10,14 +10,16 @@ export const catchAsync = (fn) => {
   };
 };
 
-export const catchErrors = (err, req, res) => {
+export const catchErrors = (err, req, res, next) => {
   let errorMessage = '';
 
   switch (err.message) {
     case 'jwt expired':
       errorMessage = 'Session expired!';
       break;
-
+    case 'No authorization token was found':
+      errorMessage = 'Session expired!';
+      break;
     default:
       errorMessage = err.message;
       break;
@@ -25,7 +27,6 @@ export const catchErrors = (err, req, res) => {
 
   res.status(err.status || 500);
   res.json({
-    status: err.status,
     message: errorMessage,
   });
 };

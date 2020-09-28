@@ -4,7 +4,8 @@ import jwtDecode from 'jwt-decode';
 export const attachUser = (req, res, next) => {
   const { token } = req.cookies;
   if (!token) {
-    return res.status(401).json({ message: 'Authentication invalid' });
+    req.user = null;
+    return next();
   }
 
   const decodedToken = jwtDecode(token);

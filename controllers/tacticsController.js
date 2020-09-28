@@ -148,4 +148,48 @@ export default {
       });
     }
   },
+
+  async update(req, res) {
+    try {
+      const { sub } = req.user;
+
+      const inputTacticId = req.body.meta.id;
+
+      // find tactic
+
+      // tactic = { ...req.body }
+
+      // tactic.save()
+
+      const tacticData = {
+        ...req.body,
+        userId: sub,
+        createdAt: new Date().getTime(),
+      };
+
+      const newTactic = new Tactic(tacticData);
+      const savedTactic = await newTactic.save();
+
+      if (!savedTactic) {
+        return res.status(400).json({
+          message: 'There was a problem creating new tactic',
+        });
+      }
+
+      const { id } = savedTactic;
+
+      const tacticInfo = {
+        id,
+      };
+
+      return res.json({
+        message: 'Tactic created!',
+        tacticInfo,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        message: 'There was a problem creating new tactic',
+      });
+    }
+  },
 };

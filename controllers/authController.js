@@ -51,7 +51,6 @@ export default {
 
       return res.json({
         message: 'User created!',
-        // token,
         userInfo,
         expiresAt,
       });
@@ -98,12 +97,25 @@ export default {
 
       return res.json({
         message: 'Authentication successful!',
-        // token,
         userInfo,
         expiresAt,
       });
     } catch (err) {
       return res.status(400).json({ message: 'Something went wrong.' });
+    }
+  },
+
+  async logout(req, res) {
+    try {
+      res.clearCookie('token');
+
+      return res.json({
+        message: 'User logout!',
+      });
+    } catch (error) {
+      return res.status(400).json({
+        message: 'There was a problem with logout',
+      });
     }
   },
 };
