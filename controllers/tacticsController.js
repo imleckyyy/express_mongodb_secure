@@ -11,10 +11,16 @@ export default {
       if (query.formationId) match.formationId = Number(query.formationId);
       if (query.text) match.$text = { $search: query.text };
 
+      const currentPage = query.page ? parseInt(query.page, 10) - 1 : 0;
+
+      const itemsPerPage = 2;
+      const itemsOffset = itemsPerPage * currentPage;
+
       const tactics = await Tactic.aggregate([
         { $match: match },
-        // { "$sort": { "date": -1 } },
-        // { "$limit": 20 },
+        { $sort: { createdAt: -1 } },
+        { $limit: itemsPerPage + itemsOffset },
+        { $skip: itemsOffset },
         {
           $lookup: {
             localField: 'userId',
@@ -39,8 +45,18 @@ export default {
         },
       ]);
 
+      console.log(tactics);
+
+      const countTactics = await Tactic.countDocuments(match);
+
+      const pageInfo = {
+        items: countTactics,
+        pages: Math.ceil(countTactics / itemsPerPage),
+      };
+
       return res.json({
         tactics,
+        pageInfo,
       });
     } catch (err) {
       return res.status(400).json({
@@ -151,28 +167,47 @@ export default {
 
   async update(req, res) {
     try {
-      const { sub } = req.user;
+      const { sub, role } = req.user;
 
-      const inputTacticId = req.body.meta.id;
+      const inputTacticData = req.body;
+      const inputTacticId = new mongoose.Types.ObjectId(inputTacticData.id);
+      const inputTacticAuthorId = inputTacticData.userId;
 
-      // find tactic
+      const tactic = await Tactic.findOne({
+        _id: inputTacticId,
+        userId: new mongoose.Types.ObjectId(inputTacticAuthorId),
+      }).lean();
 
-      // tactic = { ...req.body }
+      if (!tactic) {
+        return res.status(400).json({
+          message: 'There was a problem with finding edited tactic',
+        });
+      }
 
-      // tactic.save()
+      if (sub !== inputTacticAuthorId && role !== 'admin') {
+        return res.status(400).json({
+          message: `You don't have permission for this action`,
+        });
+      }
 
-      const tacticData = {
-        ...req.body,
-        userId: sub,
-        createdAt: new Date().getTime(),
-      };
+      delete inputTacticData.userName;
+      delete inputTacticData.userId;
+      delete inputTacticData.id;
 
-      const newTactic = new Tactic(tacticData);
-      const savedTactic = await newTactic.save();
+      const savedTactic = await Tactic.findOneAndUpdate(
+        {
+          _id: inputTacticId,
+          userId: new mongoose.Types.ObjectId(inputTacticAuthorId),
+        },
+        inputTacticData,
+        {
+          new: true,
+        },
+      );
 
       if (!savedTactic) {
         return res.status(400).json({
-          message: 'There was a problem creating new tactic',
+          message: 'There was a problem with saving tactic',
         });
       }
 
@@ -183,12 +218,58 @@ export default {
       };
 
       return res.json({
-        message: 'Tactic created!',
+        message: 'Tactic updated!',
         tacticInfo,
       });
     } catch (error) {
       return res.status(400).json({
-        message: 'There was a problem creating new tactic',
+        message: 'There was a problem with editing tactic',
+      });
+    }
+  },
+
+  async delete(req, res) {
+    try {
+      const { sub, role } = req.user;
+
+      const { id } = req.params;
+
+      const tactic = await Tactic.findOne({
+        _id: id,
+      })
+        .lean()
+        .select('_id userId');
+
+      if (!tactic) {
+        return res.status(400).json({
+          message: 'There was a problem with finding tactic',
+        });
+      }
+
+      // results.userId.equals(AnotherMongoDocument._id
+
+      if (sub !== tactic.userId.toString() && role !== 'admin') {
+        return res.status(400).json({
+          message: `You don't have permission for this action`,
+        });
+      }
+
+      const deletedItem = await Tactic.deleteOne({
+        _id: id,
+      });
+
+      if (!deletedItem) {
+        return res.status(400).json({
+          message: 'There was a problem with deleting tactic',
+        });
+      }
+
+      return res.json({
+        message: 'Tactic deleted!',
+      });
+    } catch (error) {
+      return res.status(400).json({
+        message: 'There was a problem with deleting tactic',
       });
     }
   },
