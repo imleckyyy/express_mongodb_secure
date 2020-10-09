@@ -13,7 +13,7 @@ export default {
 
       const currentPage = query.page ? parseInt(query.page, 10) - 1 : 0;
 
-      const itemsPerPage = 2;
+      const itemsPerPage = 20;
       const itemsOffset = itemsPerPage * currentPage;
 
       const tactics = await Tactic.aggregate([
@@ -44,8 +44,6 @@ export default {
           },
         },
       ]);
-
-      console.log(tactics);
 
       const countTactics = await Tactic.countDocuments(match);
 

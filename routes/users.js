@@ -7,8 +7,8 @@ import { checkJwt, requireAdmin } from '../middlewares/auth';
 export default () => {
   const api = Router();
 
-  api.get('/:id', checkJwt, requireAdmin, catchAsync(usersController.findOne));
-  api.get('/', catchAsync(usersController.findAll));
+  api.get('/:login', catchAsync(usersController.findOne));
+  api.get('/', checkJwt, requireAdmin, catchAsync(usersController.findAll));
 
   return api;
 };

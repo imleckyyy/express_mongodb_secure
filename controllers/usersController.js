@@ -1,4 +1,5 @@
 import User from '../models/User';
+import Tactic from '../models/Tactic';
 
 export default {
   async findAll(req, res) {
@@ -17,15 +18,47 @@ export default {
 
   async findOne(req, res) {
     try {
-      const { id } = req.params;
+      const { login } = req.params;
       const user = await User.findOne({
-        _id: id,
+        login,
       })
         .lean()
-        .select('_id login email role');
+        .select(
+          '_id login twitchName youTubeName redditName futbinName futheadName futwizName isVerified',
+        );
+
+      if (!user) {
+        return res.status(400).json({
+          message: 'User not found',
+        });
+      }
+
+      const itemsLimit = 10;
+      const tactics = await Tactic.find({
+        userId: user._id,
+      })
+        .sort({ createdAt: -1 })
+        .limit(itemsLimit + 1)
+        .lean()
+        .select('_id formationId defenseStyle offenseStyle tags userId createdAt');
+
+      const hasMoreTactics = tactics.length > itemsLimit;
+      const slicedTactics = hasMoreTactics ? tactics.slice(0, -1) : tactics;
+
+      const tacticsWithUserInfo = slicedTactics.map((item) => {
+        return {
+          ...item,
+          userinfo: {
+            _id: user._id,
+            login: user.login,
+          },
+        };
+      });
 
       return res.json({
         user,
+        tactics: [...tacticsWithUserInfo],
+        hasMoreTactics,
       });
     } catch (err) {
       return res.status(400).json({
